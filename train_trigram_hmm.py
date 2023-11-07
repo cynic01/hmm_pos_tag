@@ -27,7 +27,7 @@ def train_trigram_hmm(tagFile, tokenFile):
         tokens = re.split("\s+", tokenString.rstrip())
         pairs = list(zip(tags, tokens))
 
-        prev1, prev2 = INIT_STATE, INIT_STATE
+        prev2, prev1 = INIT_STATE, INIT_STATE
 
         for (tag, token) in pairs:
 
@@ -43,40 +43,40 @@ def train_trigram_hmm(tagFile, tokenFile):
 
             if tag not in emissions:
                 emissions[tag] = defaultdict(int)
-            if (prev1, prev2) not in transitions:
-                transitions[(prev1, prev2)] = defaultdict(int)
+            if (prev2, prev1) not in transitions:
+                transitions[(prev2, prev1)] = defaultdict(int)
 
             # increment the emission/transition observation
             emissions[tag][token] += 1
             emissionsTotal[tag] += 1
 
-            transitions[(prev1, prev2)][tag] += 1
-            transitionsTotal[(prev1, prev2)] += 1
+            transitions[(prev2, prev1)][tag] += 1
+            transitionsTotal[(prev2, prev1)] += 1
 
-            prev1, prev2 = prev2, tag
+            prev2, prev1 = prev1, tag
 
         # don't forget the stop probability for each sentence
-        if (prev1, prev2) not in transitions:
-            transitions[(prev1, prev2)] = defaultdict(int)
+        if (prev2, prev1) not in transitions:
+            transitions[(prev2, prev1)] = defaultdict(int)
 
-        transitions[(prev1, prev2)][FINAL_STATE] += 1
-        transitionsTotal[(prev1, prev2)] += 1
+        transitions[(prev2, prev1)][FINAL_STATE] += 1
+        transitionsTotal[(prev2, prev1)] += 1
 
     tagSet = set(emissions)
     initTagSet = tagSet | set((INIT_STATE,))
     finalTagSet = tagSet | set((FINAL_STATE,))
     
-    # for (prev1, prev2) in transitions:
-    #     for tag in transitions[(prev1, prev2)]:
-    for prev1 in initTagSet:
-        for prev2 in initTagSet:
+    # for (prev2, prev1) in transitions:
+    #     for tag in transitions[(prev2, prev1)]:
+    for prev2 in initTagSet:
+        for prev1 in initTagSet:
             for tag in finalTagSet:
-                print(f"trans {prev1} {prev2} {tag} {(transitions.get((prev1, prev2), {}).get(tag, 0) + 1) / (transitionsTotal[(prev1, prev2)] + len(tagSet))}")
+                # print(f"trans {prev2} {prev1} {tag} {transitions[(prev2, prev1)][tag] / transitionsTotal[(prev2, prev1)]}")
+                print(f"trans {prev2} {prev1} {tag} {(transitions.get((prev2, prev1), defaultdict(int))[tag] + 1) / (transitionsTotal[(prev2, prev1)] + len(finalTagSet))}")
 
     for tag in emissions:
-        # for token in emissions[tag]:
-        for token in vocab | set((OOV_WORD,)):
-            print(f"emit {tag} {token} {(emissions[tag][token] + 1) / (emissionsTotal[tag] + len(vocab))}")
+        for token in emissions[tag]:
+            print(f"emit {tag} {token} {emissions[tag][token] / emissionsTotal[tag]} ")
 
 
 if __name__ == "__main__":

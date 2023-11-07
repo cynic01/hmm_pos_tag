@@ -30,24 +30,20 @@ p_emit = {}
 States = set()
 Voc = set()
 
-try:
-    with open(hmmfile, 'r') as HMM:
-        for line in HMM:
-            trans_match = re.match(r"trans\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)", line)
-            if trans_match:
-                q2, q1, q, p = trans_match.groups()
-                p_trans.setdefault((q2, q1), {})[q] = math.log(float(p))
-                States.update((q2, q1, q))
-            else:
-                emit_match = re.match(r"emit\s+(\S+)\s+(\S+)\s+(\S+)", line)
-                if emit_match:
-                    q, w, p = emit_match.groups()
-                    p_emit.setdefault(q, {})[w] = math.log(float(p))
-                    States.add(q)
-                    Voc.add(w)
-except IOError:
-    print(f"could not open {hmmfile}")
-    exit(1)
+with open(hmmfile, 'r') as HMM:
+    for line in HMM:
+        trans_match = re.match(r"trans\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)", line)
+        if trans_match:
+            q2, q1, q, p = trans_match.groups()
+            p_trans.setdefault((q2, q1), {})[q] = math.log(float(p))
+            States.update((q2, q1, q))
+        else:
+            emit_match = re.match(r"emit\s+(\S+)\s+(\S+)\s+(\S+)", line)
+            if emit_match:
+                q, w, p = emit_match.groups()
+                p_emit.setdefault(q, {})[w] = math.log(float(p))
+                States.add(q)
+                Voc.add(w)
 
 for line in sys.stdin:
     line = line.strip()

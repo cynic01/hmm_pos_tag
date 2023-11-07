@@ -5,10 +5,19 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python: train_trigram_hmm.py",
+            "type": "python",
+            "request": "launch",
+            "program": "/local/data/zc2738/hmm_pos_tag/train_trigram_hmm.py",
+            "args": ["data/ptb.2-21.tgs", "data/ptb.2-21.txt", ">", "my_trigram.hmm"],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+        {
             "name": "Python: trigram_viterbi.py",
             "type": "python",
             "request": "launch",
-            "program": "/Users/cynic01/Downloads/COMS4705_hw2/trigram_viterbi.py",
+            "program": "/local/data/zc2738/hmm_pos_tag/trigram_viterbi.py",
             "args": ["my_trigram.hmm", "<", "data/ptb.22.txt"],
             "console": "integratedTerminal",
             "justMyCode": true
