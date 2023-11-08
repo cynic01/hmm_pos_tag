@@ -45,11 +45,26 @@ with open(hmmfile, 'r') as HMM:
                 States.add(q)
                 Voc.add(w)
 
+def subcategorize(word):
+    if not re.search(r'\w', word):
+        return 'PUNCT'
+    elif re.search(r'[A-Z]', word):
+        return 'CAPITAL'
+    elif re.search(r'\d', word):
+        return 'NUM'
+    elif re.search(r'(ion\b|ty\b|ics\b|ment\b|ence\b|ance\b|ness\b|ist\b|ism\b)', word):
+        return 'NOUNLIKE'
+    elif re.search(r'(ate\b|fy\b|ize\b|\ben|\bem)', word):
+        return 'VERBLIKE'
+    elif re.search(r'(\bun|\bin|ble\b|ry\b|ish\b|ious\b|ical\b|\bnon)', word):
+        return 'JJLIKE'
+    else:
+        return OOV_symbol
+
+
 for line in sys.stdin:
-    line = line.strip()
-    w = line.split()
-    w.insert(0, "")
-    w.insert(0, "")
+    w = line.strip().split()
+    w = ["", ""] + w
     n = len(w) - 1
     p_viterbi = {}
     Backtrace = {}
@@ -59,39 +74,35 @@ for line in sys.stdin:
         if w[i] not in Voc:
             if verbose:
                 sys.stderr.write(f"OOV: {w[i]}\n")
-            w[i] = OOV_symbol
+            w[i] = subcategorize(w[i])
         for q in States:
-            for q1 in States:
-                for q2 in States:
-                    if (q2, q1) in p_trans and q in p_trans[(q2, q1)] \
-                        and q in p_emit and w[i] in p_emit[q] \
-                        and i-1 in p_viterbi and q1 in p_viterbi[i-1]:
-                        v = p_viterbi[i-1][q1] + p_trans[(q2, q1)][q] + p_emit[q][w[i]]
-                        if i not in p_viterbi or q not in p_viterbi[i] or v > p_viterbi[i][q]:
-                            if i not in p_viterbi: p_viterbi[i] = {}
-                            p_viterbi[i][q] = v
-                            if i not in Backtrace: Backtrace[i] = {}
-                            Backtrace[i][q] = q1
+            for (q2, q1), p_state in p_trans.items():
+                if q in p_state \
+                    and q in p_emit and w[i] in p_emit[q] \
+                    and i-1 in p_viterbi and q1 in p_viterbi[i-1]:
+                    v = p_viterbi[i-1][q1] + p_state[q] + p_emit[q][w[i]]
+                    if i not in p_viterbi or q not in p_viterbi[i] or v > p_viterbi[i][q]:
+                        p_viterbi.setdefault(i, {})[q] = v
+                        Backtrace.setdefault(i, {})[q] = q1
             if verbose:
-                sys.stderr.write(f"V[{i}, {q}] = {p_viterbi[i][q]} ({p_emit[i][q]})\n")
+                sys.stderr.write(f"V[{i}, {q}] = {p_viterbi[i][q]} ({p_emit[q][w[i]]})\n")
 
     foundgoal = False
-    for q1 in States:
-        for q2 in States:
-            if (q2, q1) in p_trans and final_state in p_trans[(q2, q1)] and n in p_viterbi and q1 in p_viterbi[n]:
-                v = p_viterbi[n][q1] + p_trans[(q2, q1)][final_state]
-                if not foundgoal or v > goal:
-                    goal = v
-                    foundgoal = True
-                    q = q1
+    for (q2, q1), p_state in p_trans.items():
+        if final_state in p_state and n in p_viterbi and q1 in p_viterbi[n]:
+            v = p_viterbi[n][q1] + p_state[final_state]
+            if not foundgoal or v > goal:
+                goal = v
+                foundgoal = True
+                q = q1
+
+    if verbose:
+        sys.stderr.write(f"{math.exp(goal)}\n")
 
     if foundgoal:
         t = []
         for i in range(n, 1, -1):
             t.insert(0, q)
             q = Backtrace[i][q]
-    if verbose:
-        sys.stderr.write(f"{math.exp(goal)}\n")
-    if foundgoal:
         print(" ".join(t), end='')
     print('\n', end='')

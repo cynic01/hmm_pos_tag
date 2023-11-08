@@ -12,13 +12,13 @@
             "args": ["data/ptb.2-21.tgs", "data/ptb.2-21.txt", ">", "my_trigram.hmm"],
             "console": "integratedTerminal",
             "justMyCode": true
-        }
+        },
         {
             "name": "Python: trigram_viterbi.py",
             "type": "python",
             "request": "launch",
             "program": "/local/data/zc2738/hmm_pos_tag/trigram_viterbi.py",
-            "args": ["my_trigram.hmm", "<", "data/ptb.22.txt"],
+            "args": ["my_trigram.hmm", "<", "data/ptb.22.100.txt"],
             "console": "integratedTerminal",
             "justMyCode": true
         }
